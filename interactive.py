@@ -103,16 +103,16 @@ terms
 # %%
 
 # This took around 5 minutes to compute
-integral_1 = sp.integrate(term_1.simplify(), (t, t1, t2))
+# integral_1 = sp.integrate(term_1.simplify(), (t, t1, t2))
 
 from sympy import sqrt
 
 integral_1 = -5 * sqrt(3) / 12
 
 # This took around 17 minutes to compute
-integral_2 = sp.integrate(term_2.simplify(), (t, t1, t2))
+# integral_2 = sp.integrate(term_2.simplify(), (t, t1, t2))
 
-integral_2 = sqrt(3) / 3
+integral_2 == -sqrt(3) / 12
 
 integral_1 + integral_2
 
