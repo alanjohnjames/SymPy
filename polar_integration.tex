@@ -1,0 +1,218 @@
+% Interactive conversion of interactive.py to LaTeX
+\documentclass[11pt]{article}
+
+% Basic math + formatting
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+% Code listing (does not require shell-escape like minted)
+\usepackage{listings}
+\lstdefinestyle{pythonstyle}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!60!black},
+  showstringspaces=false,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{black!20},
+  breaklines=true,
+  tabsize=2,
+  columns=fullflexible,
+  keepspaces=true
+}
+
+\title{Parametric Integral with SymPy: From Script to LaTeX}
+\author{Converted from \texttt{interactive.py}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This document is a faithful LaTeX representation of the Python script \texttt{interactive.py}. It summarizes the mathematical definitions and results, and includes the full Python source as a listing for reference.
+
+\section{Parametric Definitions}
+Let $t$ be the parameter and define
+\begin{align}
+  x(t) &= \frac{\cos(3t)}{\sin(2t)}, \\
+  y(t) &= \frac{\sin(3t)}{\sin(2t)}.
+\end{align}
+The interval of integration is
+\begin{equation}
+  t \in [t_1, t_2] = \left[\tfrac{\pi}{6},\, \tfrac{\pi}{3}\right].
+\end{equation}
+
+\section{Derivative and Area Integral}
+Compute
+\begin{equation}
+  \frac{\mathrm{d}x}{\mathrm{d}t}
+  = \frac{ -3\,\sin(3t)\,\sin(2t) - 2\,\cos(3t)\,\cos(2t) }{\sin^2(2t)}.
+\end{equation}
+The (signed) area integral in parametric form is
+\begin{equation}
+  A = \int_{t_1}^{t_2} y(t) \, \frac{\mathrm{d}x}{\mathrm{d}t} \, \mathrm{d}t.
+\end{equation}
+The script also evaluates $4A$ for convenience.
+
+\section{Product-to-Sum Expansions}
+Using product-to-sum identities,
+\begin{align}
+  \sin(3t)\,\sin(2t) &= \tfrac{1}{2}\big(\cos(t) - \cos(5t)\big), \\
+  \cos(3t)\,\cos(2t) &= \tfrac{1}{2}\big(\cos(t) + \cos(5t)\big).
+\end{align}
+Substituting into the derivative above gives an equivalent form of the numerator, often helpful for symbolic simplification.
+
+\section{Integrand Structure}
+Define the integrand
+\begin{equation}
+  f(t) = y(t)\,\frac{\mathrm{d}x}{\mathrm{d}t}.
+\end{equation}
+In the workflow, $f(t)$ is simplified and expanded into additive terms, which are then integrated termwise over $[t_1, t_2]$.
+
+\section{Reported Results}
+From the split of the integrand into two principal terms $f_1(t)$ and $f_2(t)$, the script records the following definite integrals:
+\begin{align}
+  \int_{t_1}^{t_2} f_1(t)\,\mathrm{d}t &= -\,\frac{5\sqrt{3}}{12}, \\
+  \int_{t_1}^{t_2} f_2(t)\,\mathrm{d}t &= -\,\frac{\sqrt{3}}{12}, \\
+  \Rightarrow\quad A
+  = \int_{t_1}^{t_2} f(t)\,\mathrm{d}t &= -\,\frac{\sqrt{3}}{2}.
+\end{align}
+Consequently,
+\begin{equation}
+  4A = -2\sqrt{3}.
+\end{equation}
+
+\paragraph{Notes on Computation.} In the original script, some intermediate symbolic integrations were slow. Manual algebraic rewriting (e.g., applying product-to-sum) and splitting the integrand into simpler terms can substantially reduce the compute time for definite integrals.
+
+\section{Full Python Source}
+\noindent The full script (as provided) is included below for reference.
+
+\begin{lstlisting}[style=pythonstyle]
+#!python3
+# Solve maths problem using SymPy
+
+import sympy as sp
+from sympy import cos, sin
+from sympy.plotting import plot_parametric
+from sympy.plotting.plot import MatplotlibBackend
+
+sp.init_printing(use_latex='mathjax')
+
+# %%
+# Define the parametric functions
+x, y, theta = sp.symbols('x y theta')
+t = sp.symbols('t')
+
+x = cos(3*t) / sin(2*t)
+y = sin(3*t) / sin(2*t)
+
+
+# %%
+# Interval of integration
+t1, t2 = sp.pi/6, sp.pi/3
+
+
+# %%
+# Compute dx/dt
+dx_dt = sp.diff(x, t)
+
+
+# %%
+# Integrate y * dx/dt over [t1, t2] (before simplification)
+area = sp.integrate(y * dx_dt, (t, t1, t2))
+
+4 * area
+
+
+# %%
+# Simplify dx/dt
+dx_dt = dx_dt.simplify()
+
+# Integrate y * dx/dt over [t1, t2] (after simplification - THIS IS SLOW)
+# sp.integrate(y * dx_dt, (t, t1, t2))
+
+# %%
+# Define the integrand
+y_dx_dt = y * dx_dt
+
+# Simplify the integrand
+y_dx_dt_simplify = sp.simplify(y_dx_dt)
+
+# Integrate y * dx/dt over [t1, t2] (after simplification - THIS IS SLOW)
+
+sp.integrate(y_dx_dt_simplify, (t, t1, t2))
+
+
+
+# %%
+# Rewrite the Jacobian of the transformation base on dx_dt
+
+jacobian = (-3*sin(3*t)*sin(2*t) - 2*cos(3*t)*cos(2*t))/sp.sin(2*t)**2
+
+
+# Expand sin(3*t)*sin(2*t) using product-to-sum identity
+# sin(A)sin(B) = (1/2)[cos(A-B) - cos(A+B)]
+sin3t_sin2t_expanded = sp.Rational(1, 2) * (cos(3*t - 2*t) - cos(3*t + 2*t))
+sin3t_sin2t_simplified = sp.simplify(sin3t_sin2t_expanded)
+
+
+# cos(A)cos(B) = (1/2)[cos(A-B) + cos(A+B)]
+# Expand cos(3*t)*cos(2*t) using product-to-sum identity
+cos3t_cos2t_expanded = sp.Rational(1, 2) * (cos(3*t - 2*t) + cos(3*t + 2*t))
+cos3t_cos2t_simplified = sp.simplify(cos3t_cos2t_expanded)
+
+# Substitute expanded products into the Jacobian expression
+jacobian_expanded = jacobian.subs({
+        sin(3*t)*sin(2*t): sin3t_sin2t_expanded,
+        cos(3*t)*cos(2*t): cos3t_cos2t_expanded,
+    })
+
+# Optional: simplify the result
+jacobian_expanded_simplified = sp.simplify(jacobian_expanded)
+
+# Define the integrand based on y * dx_dt
+
+integrand = y * jacobian_expanded_simplified
+
+integrand_simplified = sp.simplify(integrand)
+
+integrand_simplified == y_dx_dt_simplify
+
+
+# %%
+# Separate integrand_simplified into additive terms (each as its own expression)
+expanded_integrand = sp.expand(integrand_simplified, trig=False)
+terms = [sp.simplify(t) for t in expanded_integrand.as_ordered_terms()]
+
+# Expose individual terms as term_1, term_2, ...
+for i, t_i in enumerate(terms, 1):
+    globals()[f"term_{i}"] = t_i
+
+terms
+
+# %%
+
+# This took around 5 minutes to compute
+# integral_1 = sp.integrate(term_1.simplify(), (t, t1, t2))
+
+from sympy import sqrt
+
+integral_1 = -5 * sqrt(3) / 12
+
+# This took around 17 minutes to compute
+# integral_2 = sp.integrate(term_2.simplify(), (t, t1, t2))
+
+integral_2 == -sqrt(3) / 12
+
+integral_1 + integral_2
+\end{lstlisting}
+
+\end{document}

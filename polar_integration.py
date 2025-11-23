@@ -1,5 +1,5 @@
 #!python3
-# Solve using parametric integration with SymPy
+# Solve using polar integration with SymPy
 
 import sympy as sp
 from sympy import cos, sin
